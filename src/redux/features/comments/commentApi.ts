@@ -1,20 +1,13 @@
 // src/redux/features/comments/commentApi.ts
+import { baseApi } from "@/redux/api/baseApi";
 import type { CreateCommentPayload, CreateCommentResponse, IDeleteCommentRequest, IDeleteCommentResponse, IEditCommentRequest, IEditCommentResponse, IGetAllCommentsForAdminResponse, IGetCommentsByIssueResponse, IReplyToCommentRequest, IReplyToCommentResponse } from "@/types/commentType";
-import { getBaseUrl } from "@/utils/getBaseUrl";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const commentApi = createApi({
-  reducerPath: "commentApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getBaseUrl()}/api/v1/reviews`,
-    credentials: "include",
-  }),
-  tagTypes: ["Comments"],
+export const commentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // 1. Create a comment
     createComment: builder.mutation<CreateCommentResponse, CreateCommentPayload>({
       query: ({ issueId, data }) => ({
-        url: `/create-comment/${issueId}`,
+        url: `/reviews/create-comment/${issueId}`,
         method: "POST",
         body: data,
       }),
@@ -24,7 +17,7 @@ export const commentApi = createApi({
     // 2. Reply to a comment
     replyToComment: builder.mutation<IReplyToCommentResponse, IReplyToCommentRequest>({
       query: ({ reviewId, data }) => ({
-        url: `/reply/${reviewId}`,
+        url: `/reviews/reply/${reviewId}`,
         method: "POST",
         body: data,
       }),
@@ -34,7 +27,7 @@ export const commentApi = createApi({
     // 3. edit a comment
     editComment: builder.mutation<IEditCommentResponse, IEditCommentRequest>({
       query: ({ reviewId, data }) => ({
-        url: `/edit-review/${reviewId}`,
+        url: `/reviews/edit-review/${reviewId}`,
         method: "PUT",
         body: data,
       }),
@@ -44,7 +37,7 @@ export const commentApi = createApi({
     // 4. delete a comment
     deleteComment: builder.mutation<IDeleteCommentResponse, IDeleteCommentRequest>({
       query: ({ reviewId, data }) => ({
-        url: `/${reviewId}`,
+        url: `/reviews/${reviewId}`,
         method: "DELETE",
         body: data,
       }),
@@ -54,7 +47,7 @@ export const commentApi = createApi({
     // 5. get all comments for admin
     getAllCommentsForAdmin: builder.query<IGetAllCommentsForAdminResponse, void>({
       query: () => ({
-        url: `/`,
+        url: `/reviews/`,
         method: "GET",
       }),
       providesTags: ["Comments"],
@@ -63,7 +56,7 @@ export const commentApi = createApi({
     // 6. get comments by issue id (public)
     getCommentsByIssue: builder.query<IGetCommentsByIssueResponse, { issueId: string; page?: number; limit?: number }>({
       query: ({ issueId, page = 1, limit = 10 }) => ({
-        url: `/issue/${issueId}?page=${page}&limit=${limit}`,
+        url: `/reviews/issue/${issueId}?page=${page}&limit=${limit}`,
         method: "GET",
       }),
       providesTags: (_result, _error, arg) => [{ type: "Comments", id: arg.issueId }],

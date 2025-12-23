@@ -28,7 +28,7 @@ const Road = () => {
   const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">
         Road Issues
       </h1>

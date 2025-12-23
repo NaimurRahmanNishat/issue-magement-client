@@ -1,19 +1,15 @@
-// src/hooks/useSocket.ts
+// // src/hooks/useSocket.ts
 import { useEffect, useRef } from "react";
-import { io, type Socket } from "socket.io-client";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
-import { toast } from "react-toastify";
+import { io, Socket } from "socket.io-client";
+import api from "@/api/axios";
 import { getBaseUrl } from "@/utils/getBaseUrl";
-import { incrementNotification } from "@/redux/features/emergency/notificationSlice";
-import type { IMessage } from "@/types/message";
-import axios from "axios";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 
 const API_URL = getBaseUrl();
 
 export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);
-  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
@@ -23,20 +19,16 @@ export const useSocket = () => {
       return;
     }
 
-    if (socketRef.current) return; // prevent duplicate connect
+    if (socketRef.current) return;
 
     (async () => {
       try {
-        // 1 Get socket token
-        const { data } = await axios.get(`${API_URL}/api/v1/auth/socket-token`, {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        });
+        // 🔐 auto refresh handled by axios interceptor
+        const { data } = await api.get("/api/v1/auth/socket-token");
 
-        const socketToken = data?.data?.socketToken;
+        const socketToken = data?.data?.socketToken; 
         if (!socketToken) return;
 
-        // 2 Connect socket
         const socket = io(API_URL, {
           auth: { token: socketToken },
           withCredentials: true,
@@ -44,37 +36,26 @@ export const useSocket = () => {
           reconnectionAttempts: 5,
         });
 
-        socketRef.current = socket;
-
-        // 3 Base events
-        socket.on("connect", () => console.log("✅ Socket connected:", socket.id));
-        socket.on("roomJoined", ({ room }) => console.log("🏠 Joined:", room));
-        socket.on("disconnect", (reason) => console.log("❌ Disconnected:", reason));
-        socket.on("connect_error", (err) =>
-          console.error("🔐 Socket auth failed:", err.message)
+        socket.on("connect", () =>
+          console.log("✅ Socket connected")
         );
 
-        // 4 Role-based listener
-        if (user.role === "category-admin") {
-          socket.on("newEmergency", (msg: IMessage) => {
-            dispatch(incrementNotification());
-            toast.error(`🚨 Emergency: ${msg.message.slice(0, 60)}...`, {
-              autoClose: 8000,
-            });
-            new Audio("/notification-sound.mp3").play().catch(() => {});
-          });
-        }
+        socket.on("connect_error", err =>
+          console.error("❌ Socket error:", err.message)
+        );
+
+        socketRef.current = socket;
       } catch (err) {
-        console.error("❌ Socket init error:", err);
+        console.error("Socket init failed", err);
       }
     })();
 
-    // 5 Cleanup
     return () => {
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
-  }, [user, dispatch]);
+  }, [user]);
 
   return socketRef;
 };
+

@@ -1,29 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // redux/features/emergency/emergencyApi.ts
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getBaseUrl } from "@/utils/getBaseUrl";
+import { baseApi } from "@/redux/api/baseApi";
 import type { ReceiveMessageResponse, SendMessagePayload, SendMessageResponse } from "@/types/message";
 
 
-export const emergencyApi = createApi({
-  reducerPath: "emergencyApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getBaseUrl()}/api/v1/emergency`,
-    credentials: "include",
-  }),
-  tagTypes: ["Emergency"],
+export const emergencyApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Send emergency message
+    // 1. Send emergency message
     sendMessage: builder.mutation<SendMessageResponse, SendMessagePayload>({
       query: (newMessage) => ({
-        url: "/send",
+        url: "/emergency/send",
         method: "POST",
         body: newMessage,
       }),
       invalidatesTags: ["Emergency"],
     }),
 
-    // Get emergency messages with pagination
+    // 2. Get emergency messages with pagination
     receiveMessage: builder.query<ReceiveMessageResponse, any>({
       query: (params = {}) => {
         const { page = 1, limit = 20, unreadOnly = false } = params;
@@ -33,7 +26,7 @@ export const emergencyApi = createApi({
           queryParams.unreadOnly = "true";
         }
         return {
-          url: "/admin/messages",
+          url: "/emergency/admin/messages",
           method: "GET",
           params: queryParams,
         };
@@ -41,37 +34,37 @@ export const emergencyApi = createApi({
       providesTags: ["Emergency"],
     }),
 
-    // Mark single message as read
+    // 3. Mark single message as read
     markMessageAsRead: builder.mutation<any, string>({
       query: (messageId) => ({
-        url: `/read/${messageId}`,
+        url: `/emergency/read/${messageId}`,
         method: "PATCH",
       }),
       invalidatesTags: ["Emergency"],
     }),
 
-    // Mark all messages as read
+    // 4. Mark all messages as read
     markAllAsRead: builder.mutation<any, void>({
       query: () => ({
-        url: "/read-all",
+        url: "/emergency/read-all",
         method: "PATCH",
       }),
       invalidatesTags: ["Emergency"],
     }),
 
-    // Get unread count
+    // 5. Get unread count
     getUnreadCount: builder.query<{ success: boolean; count: number }, void>({
       query: () => ({
-        url: "/unread-count",
+        url: "/emergency/unread-count",
         method: "GET",
       }),
       providesTags: ["Emergency"],
     }),
 
-    // Delete an emergency message
+    // 6. Delete an emergency message
     deleteMessage: builder.mutation<{ success: boolean, message: string }, string>({
       query: (messageId) => ({
-        url: `/delete/${messageId}`,
+        url: `/emergency/delete/${messageId}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Emergency"],

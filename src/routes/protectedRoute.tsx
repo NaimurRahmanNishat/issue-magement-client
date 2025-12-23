@@ -6,7 +6,6 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { RootState } from "@/redux/store";
 import { toast } from "react-toastify";
 import type { Role } from "@/types/authType";
-import { useAuthSync } from "@/hooks/useAuthSync";
 import { useSocket } from "@/hooks/useSocket";
 
 type Props = {
@@ -16,7 +15,6 @@ type Props = {
 
 const ProtectedRoute = ({ children, role }: Props) => {
   useSocket();
-  useAuthSync();
   const { user }: any = useSelector((state: RootState) => state.auth);
   const location = useLocation();
 

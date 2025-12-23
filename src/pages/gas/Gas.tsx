@@ -29,7 +29,7 @@ const Gas = () => {
   const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
   
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 min-h-screen">
       <h1 className="text-2xl font-bold text-center mb-6 text-blue-700">
         Gas Issues
       </h1>

@@ -1,20 +1,13 @@
 // src/redux/features/issues/issueApi.ts
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getBaseUrl } from "@/utils/getBaseUrl";
+import { baseApi } from "@/redux/api/baseApi";
 import type { CreateIssueResponse, DeleteIssueResponse, GetAllIssuesArgs, GetAllIssuesResponse, UpdateIssueResponse } from "@/types/issueType";
 
-export const issueApi = createApi({
-  reducerPath: "issueApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getBaseUrl()}/api/v1/issues`,
-    credentials: "include", 
-  }),
-  tagTypes: ["Review", "Issue"],
+export const issueApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // 1. create issue
     createIssue: builder.mutation<CreateIssueResponse, FormData>({
       query: (formData) => ({
-        url: "/create-issue",
+        url: "/issues/create-issue",
         method: "POST",
         body: formData,
       }),
@@ -36,7 +29,7 @@ export const issueApi = createApi({
         }
         const qs = params.toString();
         return {
-          url: `/all-issues${qs ? `?${qs}` : ""}`,
+          url: `/issues/all-issues${qs ? `?${qs}` : ""}`,
           method: "GET",
         };
       },
@@ -46,7 +39,7 @@ export const issueApi = createApi({
     // 3. issue details
     getIssueById: builder.query({
       query: (issueId) => ({
-        url: `/${issueId}`,
+        url: `/issues/${issueId}`,
         method: "GET",
       }),
       providesTags: (_result, _error, id) => [{ type: "Issue", id }],
@@ -55,7 +48,7 @@ export const issueApi = createApi({
     // 4. update issue status
     updateIssueStatus: builder.mutation<UpdateIssueResponse, { issueId: string; status: string }>({
       query: ({ issueId, status }) => ({
-        url: `/update-status/${issueId}`,
+        url: `/issues/update-status/${issueId}`,
         method: "PUT",
         body: { status },
       }),
@@ -65,7 +58,7 @@ export const issueApi = createApi({
     // 5. delete issue
     deleteIssue: builder.mutation<DeleteIssueResponse, string>({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/issues/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Issue"],

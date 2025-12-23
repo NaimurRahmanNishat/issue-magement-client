@@ -1,5 +1,4 @@
-import { getBaseUrl } from "@/utils/getBaseUrl";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from "@/redux/api/baseApi";
 
 // Admin Stats Response
 
@@ -49,18 +48,12 @@ export interface CategoryAdminStatsResponse {
 }
 
 
-const statsApi = createApi({
-  reducerPath: "statsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getBaseUrl()}/api/v1/stats`,
-    credentials: "include",
-  }),
-  tagTypes: ["Stats"],
+const statsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // 1. Get user stats by email
     getUserStats: builder.query<UserStatsResponse, void>({
       query: () => ({
-        url: `/user-stats`,
+        url: `/stats/user-stats`,
         method: "GET",
       }),
       providesTags: ["Stats"],
@@ -69,7 +62,7 @@ const statsApi = createApi({
     // 2. Get admin stats (no args)
     getAdminStats: builder.query<AdminStatsResponse, void>({
       query: () => ({
-        url: `/admin-stats`,
+        url: `/stats/admin-stats`,
         method: "GET",
       }),
       providesTags: ["Stats"],
@@ -78,7 +71,7 @@ const statsApi = createApi({
     // 3. Get category admin stats (no args)
     getCategoryAdminStats: builder.query<CategoryAdminStatsResponse, void>({
       query: () => ({
-        url: `/category-admin-stats`,
+        url: `/stats/category-admin-stats`,
         method: "GET",
       }),
       providesTags: ["Stats"],
