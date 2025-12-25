@@ -1,15 +1,24 @@
 import { configureStore } from '@reduxjs/toolkit'
+import { authApi } from './features/auth/authApi'
 import authReducer from './features/auth/authSlice';
+import { issueApi } from './features/issues/issueApi';
+import statsApi from './features/stats/statsApi';
+import { commentApi } from './features/comments/commentApi';
+import { emergencyApi } from './features/emergency/emergencyApi';
 import notificationReducer from './features/emergency/notificationSlice';
-import { baseApi } from './api/baseApi';
 
 export const store = configureStore({
   reducer: {
-    [baseApi.reducerPath]: baseApi.reducer,
+    [authApi.reducerPath]: authApi.reducer,
     auth: authReducer,
+    [issueApi.reducerPath]: issueApi.reducer,
+    [commentApi.reducerPath]: commentApi.reducer,
+    [emergencyApi.reducerPath]: emergencyApi.reducer,
     notification: notificationReducer,
+    [statsApi.reducerPath]: statsApi.reducer,
+
   },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),
+  middleware:(getDefaultMiddleware) => getDefaultMiddleware().concat(authApi.middleware, issueApi.middleware, commentApi.middleware, emergencyApi.middleware, statsApi.middleware),
 })
 
 // Get the type of our store variable

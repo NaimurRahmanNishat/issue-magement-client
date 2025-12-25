@@ -1,14 +1,21 @@
+
 // src/redux/features/auth/authApi.ts
-import type { ActivateUserPayload, ActivateUserResponse, DeleteCategoryAdminRoleResponse, EditProfileByIdResponse, ForgotPasswordPayload, ForgotPasswordResponse, GetAllCategoryAdminsResponse, GetAllUsersResponse, GetProfileByIdResponse, LoginResponse, LogoutResponse, RegisterResponse, ResetPasswordPayload, ResetPasswordResponse, UpdateCategoryAdminRolePayload, UpdateCategoryAdminRoleResponse, UserLoginPayload, UserRegisterPayload } from "@/types/authType";
-import { baseApi } from "@/redux/api/baseApi";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { ActivateUserPayload, ActivateUserResponse, DeleteCategoryAdminRoleResponse, EditProfileByIdResponse, ForgotPasswordPayload, ForgotPasswordResponse, GetAllCategoryAdminsResponse, GetAllUsersResponse, GetProfileByIdResponse, LoginResponse, LogoutResponse, RefreshTokenResponse, RegisterResponse, ResetPasswordPayload, ResetPasswordResponse, UpdateCategoryAdminRolePayload, UpdateCategoryAdminRoleResponse, UserLoginPayload, UserRegisterPayload } from "@/types/authType";
+import { getBaseUrl } from "@/utils/getBaseUrl";
 
-
-export const authApi = baseApi.injectEndpoints({
+export const authApi = createApi({
+  reducerPath: "authApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${getBaseUrl()}/api/v1/auth`,
+    credentials: "include", // Cookie send
+  }),
+  tagTypes: ["Auth", "User"],
   endpoints: (builder) => ({
     // 1. Register user
     register: builder.mutation<RegisterResponse, UserRegisterPayload>({
       query: (userData) => ({
-        url: "/auth/register",
+        url: "/register",
         method: "POST",
         body: userData,
       }),
@@ -18,7 +25,7 @@ export const authApi = baseApi.injectEndpoints({
     // 2. Activate user account
     activateUser: builder.mutation<ActivateUserResponse, ActivateUserPayload>({
       query: (data) => ({
-        url: "/auth/activate-user",
+        url: "/activate-user",
         method: "POST",
         body: data,
       }),
@@ -28,45 +35,79 @@ export const authApi = baseApi.injectEndpoints({
     // 3. Login user
     login: builder.mutation<LoginResponse, UserLoginPayload>({
       query: (credentials) => ({
-        url: "/auth/login",
+        url: "/login",
         method: "POST",
         body: credentials,
       }),
       invalidatesTags: ["Auth", "User"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.data) {
+            // Redux store update after user save
+            dispatch({ type: "auth/setUser", payload: data.data });
+          }
+        } catch (error) {
+          console.error("Login failed:", error);
+        }
+      },
     }),
 
-    // 4. Logout user
+    // 4. Refresh access token
+    refreshToken: builder.mutation<RefreshTokenResponse, { userId: string }>({
+      query: (data) => ({
+        url: "/refresh-token",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Auth"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.data) {
+            // Redux store update
+            dispatch({ type: "auth/setUser", payload: data.data });
+          }
+        } catch (err) {
+          // Refresh fail then logout
+          console.error("Token refresh failed:", err);
+          dispatch({ type: "auth/logout" });
+        }
+      },
+    }),
+
+    // 5. Logout user
     logout: builder.mutation<LogoutResponse, void>({
       query: () => ({
-        url: "/auth/logout",
+        url: "/logout",
         method: "POST",
         credentials: "include",
       }),
       invalidatesTags: ["Auth", "User"], 
     }),
 
-    // 5. forgot password
+    //6. forgot password
     forgetPassword: builder.mutation<ForgotPasswordResponse, ForgotPasswordPayload>({
       query: (data) => ({
-        url: "/auth/forgot-password",
+        url: "/forgot-password",
         method: "POST",
         body: data,
       }),
     }),
 
-    // 6. reset password
+    //7. reset password
     resetPassword: builder.mutation<ResetPasswordResponse, ResetPasswordPayload>({
       query: (data) => ({
-        url: "/auth/reset-password",
+        url: "/reset-password",
         method: "POST",
         body: data,
       }),
     }),
 
-    // 7. edit profile by id
+    // 8. edit profile by id - FIXED WITH PROPER STATE MANAGEMENT
     editProfileById: builder.mutation<EditProfileByIdResponse, { id: string; formData: FormData }>({
       query: ({ id, formData }) => ({
-        url: `/auth/edit-profile/${id}`, 
+        url: `/edit-profile/${id}`, 
         method: "PUT",
         body: formData ,
       }),
@@ -88,47 +129,47 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
-    // 8. get profile by id
+    // 9. get profile by id
     getProfileById: builder.query<GetProfileByIdResponse, string>({
       query: (id) => ({
-        url: `/auth/me/${id}`,
+        url: `/me/${id}`,
         method: "GET",
       }),
       providesTags: ["User"],
     }),
 
-    // 9. get all normal users
+    // 10. get all normal users
     getAllUsers: builder.query<GetAllUsersResponse, void>({
       query: () => ({
-        url: `/auth/all-users`,
+        url: `/all-users`,
         method: "GET",
       }),
       providesTags: ["User"],
     }),
 
-    // 10. get all category admins
+    // 11. get all category admins
     getAllCategoryAdmins: builder.query<GetAllCategoryAdminsResponse, void>({
       query: () => ({
-        url: `/auth/all-category-admins`,
+        url: `/all-category-admins`,
         method: "GET",
       }),
       providesTags: ["User"],
     }),
 
-    // 11. update category admin role
+    // 12. update category admin role
     updateCategoryAdminRole: builder.mutation<UpdateCategoryAdminRoleResponse, UpdateCategoryAdminRolePayload>({
       query: ({ id, ...data }) => ({
-        url: `/auth/update-category-admin/${id}`,
+        url: `/update-category-admin/${id}`,
         method: "PUT",
         body: data,
       }),
       invalidatesTags: ["User"],
     }),
 
-    // 12. delete category admin 
+    // 13. delete category admin 
     deleteCategoryAdminById: builder.mutation<DeleteCategoryAdminRoleResponse, string>({
       query: (id) => ({
-        url: `/auth/delete-category-admin/${id}`,
+        url: `/delete-category-admin/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["User"],
@@ -140,6 +181,7 @@ export const {
   useRegisterMutation, 
   useActivateUserMutation, 
   useLoginMutation, 
+  useRefreshTokenMutation, 
   useLogoutMutation, 
   useForgetPasswordMutation, 
   useResetPasswordMutation, 

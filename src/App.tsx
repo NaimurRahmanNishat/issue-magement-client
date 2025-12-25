@@ -2,11 +2,13 @@
 import { Outlet } from "react-router-dom";
 import Header from "./components/shared/Header";
 import { ToastContainer } from "react-toastify";
+import { useAutoRefreshToken } from "./hooks/autoRefreshToken";
 import { useSocket } from "./hooks/useSocket";
 import Footer from "./components/shared/Footer";
 
 const App = () => {
   useSocket();
+  useAutoRefreshToken();
   return (
     <div>
       <Header />

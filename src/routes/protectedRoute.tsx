@@ -6,6 +6,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { RootState } from "@/redux/store";
 import { toast } from "react-toastify";
 import type { Role } from "@/types/authType";
+import { useAutoRefreshToken } from "@/hooks/autoRefreshToken";
 import { useSocket } from "@/hooks/useSocket";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 
 const ProtectedRoute = ({ children, role }: Props) => {
   useSocket();
+  useAutoRefreshToken();
   const { user }: any = useSelector((state: RootState) => state.auth);
   const location = useLocation();
 
