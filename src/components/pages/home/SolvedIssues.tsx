@@ -1,19 +1,37 @@
+// src/components/pages/home/SolvedIssues.tsx
+
 import IssueCard from "@/components/shared/IssueCard";
 import { AuroraText } from "@/components/ui/aurora-text";
 import type { Issue } from "@/types/issueType";
 
-
-interface ProcessProps {
+interface SolvedProps {
   issues: Issue[];
 }
 
-const InProcessIssues = ({issues}: ProcessProps) => {
-  return (
-    <div className="pb-6 md:pb-10 lg:pb-16">
-      <h2 className="text-2xl text-center font-semibold mb-4">
-        <AuroraText>Solved Issues</AuroraText>
+const SolvedIssues = ({ issues }: SolvedProps) => {
+
+  if (!issues || issues.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+      <h2 className="flex items-center justify-center">
+        <AuroraText className="text-3xl font-bold text-center mb-8">
+          Solved Issues
+        </AuroraText>
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <p className="text-center text-gray-500">No solved issues found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="flex items-center justify-center">
+        <AuroraText className="text-3xl font-bold text-center mb-8">
+          Solved Issues
+        </AuroraText>
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {issues.slice(0, 3).map((issue: Issue) => (
           <div key={issue._id}>
             <IssueCard issue={issue} />
@@ -21,7 +39,7 @@ const InProcessIssues = ({issues}: ProcessProps) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default InProcessIssues;
+export default SolvedIssues;

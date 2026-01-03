@@ -1,400 +1,243 @@
+// frontend/src/pages/dashboard/categoryadmin/receive-message/ReceiveMessage.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { 
-  useReceiveMessageQuery, 
-  useMarkMessageAsReadMutation,
-  useMarkAllAsReadMutation, 
-  useDeleteMessageMutation
-} from "@/redux/features/emergency/emergencyApi";
-import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
-import type { IMessage, ISender } from "@/types/message";
-import { toast } from "react-toastify";
-import { useState } from "react";
-import Loading from "@/components/shared/Loading";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronsLeft, 
-  ChevronsRight 
-} from "lucide-react";
+import React, { useEffect, useRef, useCallback } from 'react';
+import { useEmergencyListener } from '@/hooks/useSocket';
+import { Loader2, AlertCircle, Clock, User, Mail, MessageSquare } from 'lucide-react';
+import { useGetAllMessagesQuery } from '@/redux/features/message/messageApi';
+import type { SocketNewEmergency } from '@/types/message';
+import { IssueCategory } from "@/constants/divisions";
+import type { CategoryType } from '@/types/authType';
 
-const ReceiveMessage = () => {
-  const itemsPerPage = 20;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+interface MessageListProps {
+  userRole?: 'user' | 'category-admin' | 'super-admin';
+  userCategory?: CategoryType;
+}
 
-  const user = useSelector((state: RootState) => state.auth.user);
+const ReceiveMessage = ({ userRole, userCategory }: MessageListProps) => {
+  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch messages with pagination
-  const { data, isLoading, isError, refetch } = useReceiveMessageQuery({
-  page: currentPage,
-  limit: itemsPerPage,
-  unreadOnly: showUnreadOnly,
-});
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetAllMessagesQuery({
+    cursor,
+    limit: 10,
+    sortOrder: 'desc',
+  });
 
-  const [markAsRead] = useMarkMessageAsReadMutation();
-  const [markAllAsRead] = useMarkAllAsReadMutation();
-  const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null);
+  // Socket listener for real-time updates (for category-admin)
+  useEmergencyListener(
+    userRole === 'category-admin' ? userCategory : undefined,
+    useCallback((newEmergency: SocketNewEmergency) => {
+      console.log('🚨 New emergency message:', newEmergency);
+      refetch();
+    }, [refetch])
+  );
 
-  const [deleteMessage, { isLoading: isDeleting }] = useDeleteMessageMutation();
-
-  const handleDeleteMessage = async (messageId: string) => {
-    try {
-      await deleteMessage(messageId).unwrap();
-      toast.success("Message deleted successfully!");
-    } catch (error: any) {
-      console.error("Error deleting message:", error);
-      toast.error(error?.data?.message || "Failed to delete message");
+  // Infinite scroll observer
+  useEffect(() => {
+    if (isLoading || isFetching || !data?.meta.hasMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && data?.meta.nextCursor) {
+          setCursor(data.meta.nextCursor);
+        }
+      },
+      { threshold: 1.0 }
+    );
+    
+    if (lastMessageRef.current) {
+      observerRef.current.observe(lastMessageRef.current);
     }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [data, isLoading, isFetching]);
+
+  const categoryLabels: Record<CategoryType, string> = {
+    [IssueCategory.BROKEN_ROAD]: '🛣️ Broken-Road',
+    [IssueCategory.WATER]: '💧 Water',
+    [IssueCategory.GAS]: '🔥 Gas',
+    [IssueCategory.ELECTRICITY]: '⚡ Electricity',
+    [IssueCategory.OTHER]: '📌 Others',
   };
 
-  // Access control
-  if (user?.role !== "category-admin") {
+  const getCategoryColor = (category: CategoryType): string => {
+    const colors: Record<CategoryType, string> = {
+      [IssueCategory.BROKEN_ROAD]: 'bg-orange-100 text-orange-800 border-orange-200',
+      [IssueCategory.WATER]: 'bg-blue-100 text-blue-800 border-blue-200',
+      [IssueCategory.GAS]: 'bg-red-100 text-red-800 border-red-200',
+      [IssueCategory.ELECTRICITY]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      [IssueCategory.OTHER]: 'bg-gray-100 text-gray-800 border-gray-200',
+    };
+    return colors[category];
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'now';
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hours ago`;
+    if (days < 7) return `${days} days ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  };
+
+  if (isLoading && !data) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-2">
-            ⛔ Access Denied
-          </h2>
-          <p className="text-gray-600">
-            Only category admins can view emergency messages.
-          </p>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Loading...</span>
       </div>
     );
   }
 
-  // Single message mark as read
-  const handleMarkAsRead = async (messageId: string) => {
-    try {
-      setLoadingMessageId(messageId);
-      await markAsRead(messageId).unwrap();
-      toast.success("Message marked as read!");
-    } catch (error: any) {
-      console.error("Error marking message as read:", error);
-      toast.error(error?.data?.message || "Failed to mark as read");
-    } finally {
-      setLoadingMessageId(null);
-    }
-  };
-
-  // Mark all as read
-  const handleMarkAllAsRead = async () => {
-    try {
-      const result = await markAllAsRead().unwrap();
-      toast.success(result.message || "All messages marked as read!");
-      refetch(); // Refresh data
-    } catch (error: any) {
-      console.error("Error marking all as read:", error);
-      toast.error(error?.data?.message || "Failed to mark all as read");
-    }
-  };
-
-  // Pagination handlers
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const goToFirstPage = () => handlePageChange(1);
-  const goToLastPage = () => handlePageChange(data?.totalPages || 1);
-  const goToPreviousPage = () => handlePageChange(Math.max(1, currentPage - 1));
-  const goToNextPage = () => handlePageChange(Math.min(data?.totalPages || 1, currentPage + 1));
-
-  // Toggle unread filter
-  const toggleUnreadFilter = () => {
-    setShowUnreadOnly(!showUnreadOnly);
-    setCurrentPage(1); // Reset to first page
-  };
-
-  if (isLoading || isDeleting) {
-    return <Loading />;
-  }
-
   if (isError) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-2">
-            ❌ Error Loading Messages
-          </h2>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Retry
-          </button>
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <AlertCircle className="w-6 h-6 shrink-0" />
+          <div>
+            <p className="font-medium">Something went wrong!</p>
+            <p className="text-sm mt-1">
+              {(error as any)?.data?.message || 'Failed to fetch messages.'}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   const messages = data?.data || [];
-  const totalPages = data?.totalPages || 1;
-  const totalMessages = data?.total || 0;
-  const unreadCount = messages.filter((msg) => !msg.read).length;
+  console.log(messages);  
 
   return (
-    <div className="container mx-auto py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800">
-            🚨 Emergency Messages
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Category: <span className="font-semibold">{user.category}</span>
-            <span className="ml-3 text-sm text-gray-500">
-              Total: {totalMessages} messages
+    <div className="w-full">
+      <div className="bg-white rounded-lg shadow-md">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="w-6 h-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-gray-800">
+              {userRole === 'category-admin' ? 'Emergency Messages' : 'All Messages'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 border border-amber-300 rounded-full">
+            <span className="text-sm font-medium text-amber-800">
+              Total: {messages.length}
             </span>
-            {unreadCount > 0 && (
-              <span className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">
-                {unreadCount} Unread on this page
-              </span>
-            )}
-          </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {/* Unread Filter Toggle */}
-          <button
-            onClick={toggleUnreadFilter}
-            className={`px-4 py-2 cursor-pointer rounded-lg transition ${
-              showUnreadOnly
-                ? "bg-orange-500 text-white hover:bg-orange-600"
-                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-            }`}
-          >
-            {showUnreadOnly ? "📋 Show All" : "🔴 Unread Only"}
-          </button>
+        {/* Messages List */}
+        <div className="divide-y divide-gray-200">
+          {messages.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium">No messages found!</p>
+              <p className="text-sm mt-2">Messages will appear here when they are sent.</p>
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <div
+                key={msg._id}
+                ref={index === messages.length - 1 ? lastMessageRef : null}
+                className="p-6 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex gap-4">
+                  {/* User Avatar */}
+                  <div className="shrink-0">
+                    <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                      {msg.senderName?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  </div>
 
-          {/* Mark All as Read */}
-          {unreadCount > 0 && !showUnreadOnly && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="px-4 py-2 cursor-pointer bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-            >
-              ✓ Mark All as Read
-            </button>
+                  {/* Message Content */}
+                  <div className="flex-1 space-y-3">
+                    {/* Sender Info - Always show */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        {/* Sender Name */}
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <span className="font-semibold text-gray-900">
+                            {msg.senderName || 'Unknown User'}
+                          </span>
+                        </div>
+                        
+                        {/* Sender Email */}
+                        {msg.senderEmail && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {msg.senderEmail}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Time */}
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="w-4 h-4" />
+                        {formatDate(msg.createdAt)}
+                      </div>
+                    </div>
+
+                    {/* Category Badge */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(msg.category)}`}
+                      >
+                        {categoryLabels[msg.category]}
+                      </span>
+                    </div>
+
+                    {/* Message Text */}
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                        {msg.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
 
-          {/* Refresh */}
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 cursor-pointer bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-          >
-            🔄 Refresh
-          </button>
-        </div>
-      </div>
+          {/* Loading More */}
+          {isFetching && (
+            <div className="p-6 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              <span className="ml-3 text-gray-600">Loading more...</span>
+            </div>
+          )}
 
-      {/* Messages List */}
-      {messages.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            {showUnreadOnly 
-              ? "No unread messages" 
-              : `No emergency messages yet for ${user.category} category.`
-            }
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="space-y-4 mb-6">
-            {messages.map((msg: IMessage, index: number) => {
-              const sender = typeof msg.sender === "object" ? msg.sender as ISender : null;
-              const isLoadingThis = loadingMessageId === msg._id;
-
-              return (
-                <motion.div
-                  key={msg._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`border rounded-lg p-5 shadow-md transition-all ${
-                    msg.read
-                      ? "bg-gray-50 border-gray-300"
-                      : "bg-red-50 border-red-300"
-                  }`}
-                >
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block px-3 py-1 bg-blue-500 text-white text-sm font-semibold rounded-full">
-                        {msg.category}
-                      </span>
-                      {msg.read ? (
-                        <div className="flex items-center gap-2">
-                        <span className="inline-block px-3 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full">
-                          ✓ READ
-                        </span>
-                        <button className="px-3 py-1 cursor-pointer bg-red-500 text-white text-xs font-semibold rounded-full hover:bg-red-600 transition" onClick={() => handleDeleteMessage(msg._id)}>delete</button>
-                        </div>
-                      ) : (
-                        <span className="inline-block px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full animate-pulse">
-                          NEW
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-500 text-sm">
-                      {new Date(msg.createdAt).toLocaleString("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Sender Info */}
-                  <div className="mb-3">
-                    <p className="text-gray-700">
-                      <strong>From:</strong> {msg.senderName || sender?.name || "Unknown"}
-                    </p>
-                    {sender && (
-                      <>
-                        <p className="text-gray-600 text-sm">
-                          📧 {sender.email}
-                        </p>
-                        {sender.phone && (
-                          <p className="text-gray-600 text-sm">
-                            📱 {sender.phone}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Message */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 mb-3">
-                    <p className="text-gray-800 leading-relaxed">{msg.message}</p>
-                  </div>
-
-                  {/* Mark as Read Button */}
-                  {!msg.read && (
-                    <button
-                      onClick={() => handleMarkAsRead(msg._id)}
-                      disabled={isLoadingThis}
-                      className={`w-full py-2 cursor-pointer rounded-lg font-semibold transition ${
-                        isLoadingThis
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : "bg-green-500 hover:bg-green-600 text-white"
-                      }`}
-                    >
-                      {isLoadingThis ? "Marking..." : "✓ Mark as Read"}
-                    </button>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 p-4 bg-gray-100 rounded-lg">
-              {/* Page Info */}
-              <div className="text-sm text-gray-600">
-                Showing <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-                <span className="font-semibold">
-                  {Math.min(currentPage * itemsPerPage, totalMessages)}
-                </span>{" "}
-                of <span className="font-semibold">{totalMessages}</span> messages
-              </div>
-
-              {/* Pagination Buttons */}
-              <div className="flex items-center gap-2">
-                {/* First Page */}
-                <button
-                  onClick={goToFirstPage}
-                  disabled={currentPage === 1}
-                  className={`p-2 rounded-lg transition ${
-                    currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                      : "bg-white hover:bg-gray-200 text-gray-700"
-                  }`}
-                  title="First Page"
-                >
-                  <ChevronsLeft size={20} />
-                </button>
-
-                {/* Previous Page */}
-                <button
-                  onClick={goToPreviousPage}
-                  disabled={currentPage === 1}
-                  className={`p-2 rounded-lg transition ${
-                    currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                      : "bg-white hover:bg-gray-200 text-gray-700"
-                  }`}
-                  title="Previous Page"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                {/* Page Numbers */}
-                <div className="flex gap-1">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const pageNum = index + 1;
-                    // Show only nearby pages
-                    if (
-                      pageNum === 1 ||
-                      pageNum === totalPages ||
-                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                    ) {
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 rounded-lg transition ${
-                            currentPage === pageNum
-                              ? "bg-blue-500 text-white font-semibold"
-                              : "bg-white hover:bg-gray-200 text-gray-700"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    } else if (
-                      pageNum === currentPage - 2 ||
-                      pageNum === currentPage + 2
-                    ) {
-                      return <span key={pageNum} className="px-2">...</span>;
-                    }
-                    return null;
-                  })}
-                </div>
-
-                {/* Next Page */}
-                <button
-                  onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 rounded-lg transition ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                      : "bg-white hover:bg-gray-200 text-gray-700"
-                  }`}
-                  title="Next Page"
-                >
-                  <ChevronRight size={20} />
-                </button>
-
-                {/* Last Page */}
-                <button
-                  onClick={goToLastPage}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 rounded-lg transition ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                      : "bg-white hover:bg-gray-200 text-gray-700"
-                  }`}
-                  title="Last Page"
-                >
-                  <ChevronsRight size={20} />
-                </button>
+          {/* End of Messages */}
+          {!data?.meta.hasMore && messages.length > 0 && (
+            <div className="p-6 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+                <AlertCircle className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">You have seen all messages</span>
               </div>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 };

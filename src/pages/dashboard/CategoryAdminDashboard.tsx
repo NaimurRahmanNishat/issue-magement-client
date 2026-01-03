@@ -2,6 +2,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import RightSection from "@/components/pages/dashboard/header/RightSection";
 
 interface INavItem {
   path: string;
@@ -30,12 +31,17 @@ const CategoryAdminDashboard = () => {
         </div>
 
         {/* Mobile Toggle Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden text-gray-700 focus:outline-none"
-        >
-          {menuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        <div className="flex items-center space-x-4">
+          <div className="md:hidden flex">
+            <RightSection />
+          </div>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden text-gray-700 cursor-pointer focus:outline-none"
+          >
+            {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
@@ -62,7 +68,7 @@ const CategoryAdminDashboard = () => {
       {/* Mobile Sidebar Overlay */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-40 md:hidden"
+          className="fixed inset-0 z-50 bg-black bg-opacity-40 md:hidden"
           onClick={() => setMenuOpen(false)}
         ></div>
       )}

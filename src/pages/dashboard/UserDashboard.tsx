@@ -2,6 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import RightSection from "@/components/pages/dashboard/header/RightSection";
 
 const navItems = [
   { path: "/dashboard/user", label: "Dashboard" },
@@ -27,12 +28,17 @@ const UserDashboard = () => {
         </div>
 
         {/* Mobile Toggle Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden text-gray-700 focus:outline-none"
-        >
-          {menuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        <div className="flex items-center space-x-4">
+          <div className="md:hidden flex">
+            <RightSection />
+          </div>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden text-gray-700 cursor-pointer focus:outline-none"
+          >
+            {menuOpen ? <X size={28} /> : <Menu size={28} className="hover:text-gray-800 transition-all duration-500"/>}
+          </button>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
@@ -59,14 +65,14 @@ const UserDashboard = () => {
       {/* Mobile Sidebar Overlay */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-40 md:hidden"
+          className="fixed inset-0 z-1 bg-black bg-opacity-40 md:hidden"
           onClick={() => setMenuOpen(false)}
         ></div>
       )}
 
       {/* Mobile Sidebar Menu */}
       <div
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 left-0 z-10 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 md:hidden ${
           menuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -76,7 +82,7 @@ const UserDashboard = () => {
           </Link>
           <button
             onClick={() => setMenuOpen(false)}
-            className="text-gray-700 focus:outline-none"
+            className="text-gray-700 cursor-pointer hover:text-red-500 transition-all duration-500 focus:outline-none"
           >
             <X size={28} />
           </button>

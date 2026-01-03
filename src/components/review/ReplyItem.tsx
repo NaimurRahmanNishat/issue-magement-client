@@ -1,4 +1,5 @@
 // // src/components/review/ReplyItem.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -26,12 +27,10 @@ const ReplyItem = ({ reply, reviewId }: ReplyItemProps) => {
   const [editComment, { isLoading: isUpdating }] = useEditCommentMutation();
   const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation();
 
-  // ✅ Safe check: যদি author null হয় তাহলে false return করবে
   const isAuthor = user?._id && reply.author?._id 
     ? user._id === reply.author._id 
     : false;
 
-  // ✅ যদি author data না থাকে, তাহলে fallback UI দেখাবে
   if (!reply.author) {
     return (
       <div className="bg-gray-100 rounded-lg p-3 text-center">

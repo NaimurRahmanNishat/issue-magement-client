@@ -1,3 +1,5 @@
+// src/components/pages/dashboard/header/ProfileCard.tsx
+
 import { useNavigate } from "react-router-dom";
 import userIcon from "../../../../assets/user.png"
 import { useSelector } from "react-redux";

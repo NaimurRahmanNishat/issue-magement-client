@@ -1,3 +1,5 @@
+// src/components/pages/home/HeroImageSlider.tsx
+
 import watarOne from "../../../assets/hero/watarThree.jpg";
 import gasOne from "../../../assets/hero/gasOne.jpg";
 import watarTwo from "../../../assets/hero/watarTwo.jpg";
@@ -21,12 +23,12 @@ const heroImage: HeroImage[] = [
 
 const HeroImageSlider = () => {
   return (
-    <div className="absolute top-20 left-0 w-full h-[600px] overflow-hidden">
+    <div className="absolute top-20 left-0 w-full h-150 overflow-hidden">
       <div className="flex animate-slide">
         {[...heroImage, ...heroImage].map((img, index) => (
           <div
             key={`{index}-${index}`}
-            className="shrink-0 w-[1920px] h-[600px]"
+            className="shrink-0 w-480 h-150"
           >
             <img
               src={img.image}

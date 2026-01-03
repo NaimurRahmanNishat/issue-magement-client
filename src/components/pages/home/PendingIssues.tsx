@@ -1,3 +1,5 @@
+// src/components/pages/home/PendingIssues.tsx
+
 import IssueCard from "@/components/shared/IssueCard";
 import { AuroraText } from "@/components/ui/aurora-text";
 import type { Issue } from "@/types/issueType";
@@ -7,11 +9,29 @@ interface Props {
 }
 
 const PendingIssues = ({ issues }: Props) => {
+  
+  if (!issues || issues.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+      <h2 className="flex items-center justify-center">
+        <AuroraText className="text-3xl font-bold text-center mb-8">
+          Pending Issues
+        </AuroraText>
+      </h2>
+        <p className="text-center text-gray-500">No pending issues found</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="py-6 md:py-10 lg:py-16">
-      <h2 className="text-2xl text-center font-semibold mb-4"><AuroraText>Pending Issues</AuroraText></h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="flex items-center justify-center">
+        <AuroraText className="text-3xl font-bold text-center mb-8">
+          Pending Issues
+        </AuroraText>
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {issues.slice(0, 3).map((issue: Issue) => (
           <div key={issue._id}>
             <IssueCard issue={issue} />

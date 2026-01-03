@@ -11,6 +11,7 @@ import Devision from "@/components/pages/dashboard/createIssue/Devision";
 import Description from "@/components/pages/dashboard/createIssue/Description";
 import LocationInput from "@/components/pages/dashboard/createIssue/LocationInput";
 import type { CategoryType, Division } from "@/types/authType";
+import { toast } from "react-toastify";
 
 interface IssueFormData {
   title: string;
@@ -19,11 +20,12 @@ interface IssueFormData {
   location: string;
   division: Division | "";
   date: string;
-  images: File[]; // ✅ CHANGED: File[] instead of IssueImage[]
+  images: File[]; 
 }
 
 const CreateIssue = () => {
   const navigate = useNavigate();
+  const [uploadKey, setUploadKey] = useState(0);
   const [issue, setIssue] = useState<IssueFormData>({
     title: "",
     category: "",
@@ -81,20 +83,23 @@ const handleSubmit = async (e: React.FormEvent) => {
       formData.append("images", file);
     });
 
-    await createIssue(formData).unwrap();
-    setSuccessMessage("Issue created successfully!");
+await createIssue(formData).unwrap();
 
-    // Form reset
-    setIssue({
-      title: "",
-      category: "",
-      description: "",
-      location: "",
-      division: "",
-      date: new Date().toISOString().split("T")[0],
-      images: [],
-    });
+setSuccessMessage("Issue created successfully!");
 
+// Reset form
+setIssue({
+  title: "",
+  category: "",
+  description: "",
+  location: "",
+  division: "",
+  date: new Date().toISOString().split("T")[0],
+  images: [],
+});
+
+// 🔥 THIS LINE IS THE FIX
+setUploadKey((prev) => prev + 1);
     setTimeout(() => {
       setSuccessMessage("");
     }, 3000);
@@ -112,6 +117,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     alert(errorMessage);
   }
 };
+
+  if(successMessage){
+    toast.success(successMessage);
+  }
 
   return (
 <motion.div
@@ -132,17 +141,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         <LocationInput issue={issue} handleChange={handleChange} />
         <Description issue={issue} handleChange={handleChange} />
         <IssueDate issue={issue} handleChange={handleChange} />
-
         <UploadImage
+          key={uploadKey}
           setIssue={handleImagesChange}
           currentImages={issue.images}
         />
-
-        {successMessage && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {successMessage}
-          </div>
-        )}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -166,15 +169,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           </button>
         </div>
       </form>
-
-      {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-center">Issues Creating...</p>
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 };

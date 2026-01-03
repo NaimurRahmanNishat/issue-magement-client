@@ -44,7 +44,7 @@ const UserLineChart: React.FC<UserLineChartProps> = ({ monthlyData }) => {
           No issues created this year
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height="85%">
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart 
             data={lineData}
             margin={{ top: 5, right: 10, left: -10, bottom: 5 }}

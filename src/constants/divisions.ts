@@ -1,3 +1,5 @@
+// frontend/src/constants/divisions.ts
+
 export const BangladeshDivision = {
   DHAKA: "Dhaka",
   CHATTOGRAM: "Chattogram",

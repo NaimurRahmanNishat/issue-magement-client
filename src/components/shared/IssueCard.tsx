@@ -38,13 +38,23 @@ const IssueCard = ({ issue }: IssueCardProps) => {
                 {issue.status}
               </span>
             )}
+            {issue.status === "approved" && (
+              <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+                {issue.status}
+              </span>
+            )}
             {issue.status === "in-progress" && (
               <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
                 {issue.status}
               </span>
             )}
-            {issue.status === "solved" && (
-              <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+            {issue.status === "resolved" && (
+              <span className="px-2 py-1 text-xs font-semibold text-pink-800 bg-orange-200 rounded-full">
+                {issue.status}
+              </span>
+            )}
+            {issue.status === "rejected" && (
+              <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-green-200 rounded-full">
                 {issue.status}
               </span>
             )}
@@ -59,7 +69,7 @@ const IssueCard = ({ issue }: IssueCardProps) => {
                   <img
                     src={images[0].url}
                     alt={`${issue.title} - Image 1`}
-                    className="w-full h-[200px] object-cover aspect-4/3"
+                    className="w-full h-50 object-cover aspect-4/3"
                   />
 
                   {/* Content Section - directly under big image */}
@@ -78,8 +88,8 @@ const IssueCard = ({ issue }: IssueCardProps) => {
                 {imageCount >= 2 && (
                   <div className="hidden md:flex flex-1">
                     {imageCount >= 3 ? (
-                      <div className="flex flex-col h-[300px]">
-                        <div className="flex-1 h-[200px]">
+                      <div className="flex flex-col h-75">
+                        <div className="flex-1 h-50">
                           <img
                             src={images[1].url}
                             alt={`${issue.title} - Image 2`}

@@ -19,37 +19,50 @@ export interface IReply {
   updatedAt: string;
 }
 
+export interface IIssueBasic {
+  _id: string;
+  title: string;
+  category: string;
+  status: string;
+}
+
 export interface IComment {
   _id: string;
-  issue: string;
+  issue: string | IIssueBasic;
   author: IAuthor;
   comment: string;
+  commentType: string;
   replies: IReply[];
   createdAt: string;
   updatedAt: string;
 }
 
-// 1. create a comment
-export interface CreateCommentResponse {
-  success: boolean;
-  message: string;
-  review: IComment;
+// Cursor Pagination Meta
+export interface ICursorPaginationMeta {
+  nextCursor: string | null;
+  hasMore: boolean;
+  limit: number;
+  total?: number;
+  hasNextPage?: boolean;
 }
 
-export interface CreateCommentPayload {
+
+// ============================================ 1. Create Comment ============================================
+export interface ICreateCommentRequest {
   issueId: string;
   data: {
     comment: string;
   };
 }
 
-// 2. reply to a comment
-export interface IReplyToCommentResponse {
+export interface ICreateCommentResponse {
   success: boolean;
   message: string;
-  review: IComment;
+  data: IComment;
 }
 
+
+// ============================================ 2. Reply to Comment ============================================
 export interface IReplyToCommentRequest {
   reviewId: string;
   data: {
@@ -58,13 +71,14 @@ export interface IReplyToCommentRequest {
   };
 }
 
-// 3. edit a comment
-export interface IEditCommentResponse {
+export interface IReplyToCommentResponse {
   success: boolean;
   message: string;
-  review: IComment;
+  data: IComment;
 }
 
+
+// ============================================ 3. Edit Comment ============================================
 export interface IEditCommentRequest {
   reviewId: string;
   data: {
@@ -73,12 +87,14 @@ export interface IEditCommentRequest {
   };
 }
 
-// 4. delete a comment
-export interface IDeleteCommentResponse {
+export interface IEditCommentResponse {
   success: boolean;
   message: string;
+  data: IComment;
 }
 
+
+// ============================================ 4. Delete Comment ============================================
 export interface IDeleteCommentRequest {
   reviewId: string;
   data?: {
@@ -86,21 +102,65 @@ export interface IDeleteCommentRequest {
   };
 }
 
-// 5. get comments by issue for admin
-export interface IGetAllCommentsForAdminResponse {
+export interface IDeleteCommentResponse {
   success: boolean;
-  source: string;
-  count: number;
-  reviews: IComment[];
+  message: string;
 }
 
-// 6. get comments by issue id (public)
+
+// ============================================ 5. Get All Comments for Admin (Cursor Pagination) ============================================
+export interface IGetAllCommentsForAdminRequest {
+  cursor?: string;
+  limit?: number;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface IGetAllCommentsForAdminResponse {
+  success: boolean;
+  message: string;
+  data: IComment[];
+  meta: ICursorPaginationMeta;
+}
+
+// ============================================ 6. Get Comments by Issue ID (Cursor Pagination) ============================================
+export interface IGetCommentsByIssueRequest {
+  issueId: string;
+  cursor?: string;
+  limit?: number;
+  sortOrder?: "asc" | "desc";
+}
+
 export interface IGetCommentsByIssueResponse {
   success: boolean;
-  source: string;
-  count: number;
-  total: number;
-  page: number;
-  totalPages: number;
-  reviews: IComment[];
+  message: string;
+  data: IComment[];
+  meta: ICursorPaginationMeta;
 }
+
+
+// ============================================ 7. Get Single Review by ID ============================================
+export interface IGetReviewByIdRequest {
+  reviewId: string;
+}
+
+export interface IGetReviewByIdResponse {
+  success: boolean;
+  message: string;
+  data: IComment;
+}
+
+// ============================================ 8. Get Reviews by User ID (Cursor Pagination) ============================================
+export interface IGetReviewsByUserRequest {
+  userId: string;
+  cursor?: string;
+  limit?: number;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface IGetReviewsByUserResponse {
+  success: boolean;
+  message: string;
+  data: IComment[];
+  meta: ICursorPaginationMeta;
+}
+

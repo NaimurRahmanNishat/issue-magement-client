@@ -1,3 +1,5 @@
+// src/pages/dashboard/DashboardLayout.tsx
+
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router";
 import type { RootState } from "@/redux/store";
@@ -9,9 +11,6 @@ import DashboardHeader from "@/components/pages/dashboard/header/DashboardHeader
 
 const DashboardLayout = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
 
   const renderDashboard = () => {
     switch (user?.role) {
@@ -29,14 +28,14 @@ const DashboardLayout = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-100">
       {/* Sidebar */}
-      <aside className="xl:w-1/6 lg:w-1/5 md:w-1/4 sm:w-2/5 w-full md:h-screen sticky top-0 overflow-y-auto border-r bg-white shadow-md z-10">
+      <aside className="xl:w-1/6 lg:w-1/5 md:w-1/4 sm:w-2/5 w-full md:h-screen sticky top-0 overflow-y-auto bg-white z-10">
         {renderDashboard()}
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col bg-slate-100">
+      <div className="flex-1 flex flex-col">
         {/* Header (non-sticky) */}
-        <div className="w-full mt-4">
+        <div className="md:sticky top-0 z-10">
           <DashboardHeader />
         </div>
 

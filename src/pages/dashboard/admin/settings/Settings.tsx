@@ -1,8 +1,11 @@
+import ProfileSettings from "@/components/pages/dashboard/shared/ProfileSetting";
 
 
 const Settings = () => {
   return (
-    <div>Settings</div>
+    <div>
+      <ProfileSettings/>
+    </div>
   )
 }
 

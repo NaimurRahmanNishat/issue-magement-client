@@ -33,7 +33,7 @@ const Header = () => {
             aria-label="Toggle mobile menu"
             aria-expanded={menuOpen}
           >
-            {menuOpen ? <X size={28} /> : <Menu size={28} />}
+            {menuOpen ? <X size={28} className="cursor-pointer"/> : <Menu size={28} className="cursor-pointer"/>}
           </button>
         </div>
       </div>
@@ -61,7 +61,7 @@ const Header = () => {
             <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           </Link>
           <button onClick={() => setMenuOpen(false)}>
-            <X size={24} className="text-gray-600" />
+            <X size={24} className="text-gray-600 cursor-pointer hover:text-pink-600" />
           </button>
         </div>
 

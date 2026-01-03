@@ -1,7 +1,9 @@
+// src/components/dashboard/user/UserPieChart.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
-import type { UserStatsResponse } from "@/redux/features/stats/statsApi";
+import type { UserStatsResponse } from "@/types/statsType";
 
 interface UserPieChartProps {
   stats: UserStatsResponse["data"];
@@ -9,40 +11,45 @@ interface UserPieChartProps {
 
 const UserPieChart = ({ stats }: UserPieChartProps) => {
   const pieData = {
-    labels: ["Pending", "In Progress", "Solved", "Total Issues"],
+    labels: ["Pending", "Approved", "In Progress", "Resolved", "Rejected"],
     datasets: [
       {
-        label: "My Issue Distribution",
+        label: "Issue Status",
         data: [
           stats.totalPending,
+          stats.totalApproved,
           stats.totalInProgress,
-          stats.totalSolved,
-          stats.totalIssues,
+          stats.totalResolved,
+          stats.totalRejected,
         ],
         backgroundColor: [
           "#FF6384", // Pending - Red/Pink
+          "#FFCE56", // Approved - Yellow
           "#36A2EB", // In Progress - Blue
-          "#4CAF50", // Solved - Green
-          "#9C27B0", // Total - Purple
+          "#4CAF50", // Resolved - Green
+          "#9E9E9E", // Rejected - Gray
         ],
         borderColor: [
           "rgba(255, 99, 132, 1)",
+          "rgba(255, 206, 86, 1)",
           "rgba(54, 162, 235, 1)",
           "rgba(76, 175, 80, 1)",
-          "rgba(156, 39, 176, 1)",
+          "rgba(158, 158, 158, 1)",
         ],
         borderWidth: 2,
         hoverBackgroundColor: [
           "rgba(255, 99, 132, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
           "rgba(54, 162, 235, 0.8)",
           "rgba(76, 175, 80, 0.8)",
-          "rgba(156, 39, 176, 0.8)",
+          "rgba(158, 158, 158, 0.8)",
         ],
         hoverBorderColor: [
           "rgba(255, 99, 132, 1)",
+          "rgba(255, 206, 86, 1)",
           "rgba(54, 162, 235, 1)",
           "rgba(76, 175, 80, 1)",
-          "rgba(156, 39, 176, 1)",
+          "rgba(158, 158, 158, 1)",
         ],
         hoverBorderWidth: 3,
       },
@@ -61,9 +68,11 @@ const UserPieChart = ({ stats }: UserPieChartProps) => {
             size: 12,
           },
           usePointStyle: true,
+          pointStyle: "circle" as const,
         },
       },
       tooltip: {
+        enabled: true,
         backgroundColor: "rgba(0, 0, 0, 0.8)",
         padding: 12,
         titleFont: {
@@ -83,6 +92,13 @@ const UserPieChart = ({ stats }: UserPieChartProps) => {
           }
         }
       },
+      title: {
+        display: false,
+      },
+    },
+    animation: {
+      animateRotate: true,
+      animateScale: true,
     },
   };
 
@@ -91,7 +107,7 @@ const UserPieChart = ({ stats }: UserPieChartProps) => {
       <h1 className="text-xl font-bold mb-4 text-gray-800">
         Issue Status Distribution
       </h1>
-      <div className="flex-1 max-h-96 md:h-96">
+      <div className="relative flex-1 min-h-75">
         <Pie data={pieData} options={options} />
       </div>
     </div>

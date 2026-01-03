@@ -40,7 +40,7 @@ const LineChartPage: React.FC<LinePageProps> = ({ monthlyData }) => {
       
       {/* Show message if no data */}
       {safeMonthlyData.length === 0 && (
-        <div className="flex items-center justify-center h-[300px] text-gray-500">
+        <div className="flex items-center justify-center h-75 text-gray-500">
           No data available for this year
         </div>
       )}

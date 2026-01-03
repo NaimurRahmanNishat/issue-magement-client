@@ -1,15 +1,17 @@
 // src/types/authType.ts
 
+// ==================== Common Types ====================
 export type Role = "user" | "category-admin" | "super-admin";
 export type CategoryType = "broken_road" | "water" | "gas" | "electricity" | "other";
 export type Division = "Dhaka" | "Chattogram" | "Rajshahi" | "Khulna" | "Barishal" | "Sylhet" | "Rangpur" | "Mymensingh";
 export type ImageType = { public_id: string; url: string };
 
+// ==================== Main User Interface ====================
 export interface TAuthUser {
   _id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   phone?: string;
   nid?: string;
   isVerified: boolean;
@@ -31,19 +33,20 @@ export interface TAuthUser {
   updatedAt: Date;
 }
 
-
-// ================================= API Response Types & Payload ==================================
-
-// 1. register api
-export interface RegisterResponse {
-  success: boolean;
-  message: string;
-  data: {
-    message: string;
-    expiresIn: string;
-  };
+// ==================== Pagination ====================
+export interface PaginationParams {
+  cursor?: string;    
+  limit?: number;
+  sortOrder?: "asc" | "desc";
 }
 
+export interface PaginationMeta {
+  nextCursor: string | null;
+  hasNextPage: boolean;
+  total: number;
+}
+
+// ==================== 1. Register API ====================
 export interface UserRegisterPayload {
   name: string;
   email: string;
@@ -51,147 +54,140 @@ export interface UserRegisterPayload {
   confirmPassword: string;
   phone: string;
   nid: string;
-  category?: CategoryType;
+  role?: "user" | "category-admin"; 
+  category?: CategoryType; 
+  division?: Division; 
 }
 
-
-// 2. activate api
-export interface ActivateUserResponse {
+export interface RegisterResponse {
   success: boolean;
   message: string;
   data: {
-    token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      role: Role;
-    };
-  }
+    id?: string; 
+    email: string;
+    name?: string; 
+    role?: string; 
+    category?: CategoryType; 
+    expiresIn?: string; 
+  };
 }
 
+// ==================== 2. Activate User API ====================
 export interface ActivateUserPayload {
   email: string;
   activationCode: string;
 }
 
-
-// 3. login api
-export interface LoginResponse {
+export interface ActivateUserResponse {
   success: boolean;
   message: string;
-  data: TAuthUser;  
+  data: TAuthUser; 
 }
 
+// ==================== 3. Login API ====================
 export interface UserLoginPayload {
   email: string;
   password: string;
 }
 
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: TAuthUser; 
+}
 
-// 4. refresh token
+// ==================== 4. Refresh Token API ====================
 export interface RefreshTokenResponse {
   success: boolean;
   message: string;
-  data: TAuthUser;
 }
 
-
-// 5. logout
+// ==================== 5. Logout API ====================
 export interface LogoutResponse {
   success: boolean;
   message: string;
 }
 
-
-// 6. forgot password
-export interface ForgotPasswordResponse {
-  success: boolean;
-  message: string;
-}
-
+// ==================== 6. Forgot Password API ====================
 export interface ForgotPasswordPayload {
   email: string;
 }
 
-
-// 7. reset password
-export interface ResetPasswordResponse {
+export interface ForgotPasswordResponse {
   success: boolean;
   message: string;
+  data: {
+    email: string;
+    expiresIn: string;
+  };
 }
 
+// ==================== 7. Reset Password API ====================
 export interface ResetPasswordPayload {
   otp: string;
   newPassword: string;
 }
 
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
 
-// 8. edit profile by id
+// ==================== 8. Edit Profile API ====================
+export interface EditProfileByIdPayload {
+  id: string;
+  formData: FormData; 
+}
+
 export interface EditProfileByIdResponse {
   success: boolean;
   message: string;
   data: TAuthUser;
 }
 
-export interface EditProfileByIdPayload {
-  id: string;
-  name?: string;
-  email?: string;
-  zipCode?: string;
-  profession?: string;
-  phone?: string;
-  avatar?: ImageType;
-  nidPic?: ImageType[]; 
-  division?: Division;
-}
-
-
-// 9. get profile by id
+// ==================== 9. Get Profile API ====================
 export interface GetProfileByIdResponse {
   success: boolean;
   message: string;
   data: TAuthUser;
 }
 
-
-// 10. get all normal users
+// ==================== 10. Get All Users API ====================
 export interface GetAllUsersResponse {
   success: boolean;
   message: string;
   data: TAuthUser[];
-  totalUsers: number;
+  meta: PaginationMeta;
 }
 
-
-// 11. get all category admins
+// ==================== 11. Get All Category Admins API ====================
 export interface GetAllCategoryAdminsResponse {
   success: boolean;
   message: string;
-  totalCategoryAdmins: number;
   data: TAuthUser[];
+  meta: PaginationMeta; // ✅ Backend returns pagination meta
 }
 
+// ==================== 12. Update Category Admin API ====================
+export interface UpdateCategoryAdminRolePayload {
+  id: string;
+  category?: CategoryType; // ✅ Optional
+  division?: Division; // ✅ Optional
+}
 
-// 12. update category admin role
 export interface UpdateCategoryAdminRoleResponse {
   success: boolean;
   message: string;
   data: {
     id: string;
-    category: CategoryType;
-    division: Division;
+    name: string;
+    email: string;
+    category?: CategoryType;
+    division?: Division;
   };
 }
 
-export interface UpdateCategoryAdminRolePayload {
-  id: string;
-  category: CategoryType;
-  division: Division;
-}
-
-
-// 13. delete category admin
+// ==================== 13. Delete Category Admin API ====================
 export interface DeleteCategoryAdminRoleResponse {
   success: boolean;
   message: string;

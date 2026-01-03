@@ -1,18 +1,16 @@
+// src/components/pages/dashboard/shared/ProfileSetting.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { User, Mail, Phone, CreditCard, MapPin, Briefcase, Shield, Camera } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGetProfileByIdQuery } from '@/redux/features/auth/authApi';
-import type { RootState } from '@/redux/store';
-import { useSelector } from 'react-redux';
 import Loading from '@/components/shared/Loading';
 import { motion } from 'framer-motion';
 
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
-  const auth = useSelector((state: RootState) => state.auth);
-  const userId = auth?.user?._id ?? "";
-  const { data, isLoading, error } = useGetProfileByIdQuery(userId);
+  const { data, isLoading, error } = useGetProfileByIdQuery();
   const user = data?.data;
 
   if (isLoading) return <Loading/>;

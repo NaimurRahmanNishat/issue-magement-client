@@ -1,4 +1,5 @@
-// src/components/review/CommentSection.tsx
+// src/components/review/CommentItem.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useSelector } from "react-redux";

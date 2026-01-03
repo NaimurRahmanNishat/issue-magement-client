@@ -1,4 +1,5 @@
 // src/routes/router.tsx
+
 import App from "@/App";
 import ErrorPage from "@/components/shared/ErrorPage";
 import DetailsPage from "@/pages/[id]/DetailsPage";
@@ -20,19 +21,17 @@ import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import UserDashboardMain from "@/pages/dashboard/user/dashboard/UserDashboardMain";
 import CreateIssue from "@/pages/dashboard/user/create-issue/CreateIssue";
 import MyIssues from "@/pages/dashboard/user/my-issues/MyIssues";
-import ProfileSettings from "@/pages/dashboard/user/profile-settings/ProfileSettings";
-import EmergencyMessage from "@/pages/dashboard/user/emergency/EmergencyMessage";
+import ProfileSettings from "@/pages/dashboard/user/profile-settings/Profile";
+import EmergencyMessage from "@/pages/dashboard/user/sendMessage/SendMessage";
 import CategoryAdminDashboardMain from "@/pages/dashboard/categoryadmin/dashboard/CategoryAdminDashboardMain";
-import StatusManagement from "@/pages/dashboard/categoryadmin/status-management/StatusManagement";
-import UserCategoryAdmin from "@/pages/dashboard/categoryadmin/user-management/UserCategoryAdmin";
 import CategoryAdminProfile from "@/pages/dashboard/categoryadmin/profile/CategoryAdminProfile";
 import ReceiveMessage from "@/pages/dashboard/categoryadmin/receive-message/ReceiveMessage";
 import AdminDashboardMain from "@/pages/dashboard/admin/dashboard/AdminDashboardMain";
 import VendorManagement from "@/pages/dashboard/admin/vendor-management/VendorManagement";
-import UserManagement from "@/pages/dashboard/admin/user-management/UserManagement";
 import Settings from "@/pages/dashboard/admin/settings/Settings";
 import UserUpdateProfile from "@/pages/dashboard/user/update-profile/UserUpdateProfile";
-import AdminStatusManagement from "@/pages/dashboard/admin/admin-status/AdminStatusManagement";
+import StatusManagementCommon from "@/components/pages/dashboard/shared/StatusManagementCommon";
+import UserManagementCommon from "@/components/pages/dashboard/shared/UserManagementCommon";
 
 const router = createBrowserRouter([
   {
@@ -86,16 +85,12 @@ const router = createBrowserRouter([
       },
       {
         path: "/:issueId",
-        element: (
-          <ProtectedRoute>
-            <DetailsPage />
-          </ProtectedRoute>
-        ),
+        element: <DetailsPage />,
       },
       {
-        path: "/location/:division",
+        path: "/divisions/:division",
         element: <LocationPage />,
-      },
+      }
     ],
   },
   {
@@ -142,22 +137,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "status-management", // children relative path
-        element: (
-          <ProtectedRoute role="category-admin">
-            <StatusManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "user-management", // children relative path
-        element: (
-          <ProtectedRoute role="category-admin">
-            <UserCategoryAdmin />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "profile-settings", // children relative path
         element: (
           <ProtectedRoute role="category-admin">
@@ -168,15 +147,31 @@ const router = createBrowserRouter([
       {
         path: "receive-message", // children relative path
         element: (
-          <ProtectedRoute role="category-admin">
+          <ProtectedRoute role={["category-admin", "super-admin"]}>
             <ReceiveMessage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "user-management", // children relative path
+        element: (
+          <ProtectedRoute role={["category-admin", "super-admin"]}>
+            <UserManagementCommon />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "status-management", // children relative path
+        element: (
+          <ProtectedRoute role={["category-admin", "super-admin"]}>
+            <StatusManagementCommon />
           </ProtectedRoute>
         ),
       },
 
       // admin routes
       {
-        path: "admin", // children relative path
+        path: "super-admin", // children relative path
         element: (
           <ProtectedRoute role="super-admin">
             <AdminDashboardMain />
@@ -188,22 +183,6 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute role="super-admin">
             <VendorManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "admin-status-management", // children relative path
-        element: (
-          <ProtectedRoute role="super-admin">
-            <AdminStatusManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "user-management-admin", // children relative path
-        element: (
-          <ProtectedRoute role="super-admin">
-            <UserManagement />
           </ProtectedRoute>
         ),
       },

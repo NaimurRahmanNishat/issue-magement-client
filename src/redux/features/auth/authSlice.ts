@@ -8,7 +8,7 @@ export interface AuthState {
   loading: boolean;
 }
 
-// localStorage get user
+// localStorage get user 
 const loadUserFromStorage = (): TAuthUser | null => {
   try {
     const savedUser = localStorage.getItem("user");
@@ -25,6 +25,7 @@ const initialState: AuthState = {
   isAuthenticated: !!loadUserFromStorage(),
   loading: false,
 };
+
 
 const authSlice = createSlice({
   name: "auth",

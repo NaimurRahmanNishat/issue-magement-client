@@ -1,3 +1,5 @@
+// src/components/dashboard/user/UserDashboardMain.tsx
+
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import userAvatar from "../../../../assets/man-with-laptop.png";
@@ -7,6 +9,7 @@ import { NumberTicker } from "@/components/ui/number-ticker";
 import { AuroraText } from "@/components/ui/aurora-text";
 import UserPieChart from "./UserPieChart";
 import UserLineChart from "./UserLineChart";
+import { Link } from "react-router-dom";
 
 const UserDashboardMain = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -15,9 +18,12 @@ const UserDashboardMain = () => {
   const stats = userData?.data || {
     totalIssues: 0,
     totalReviewAndComment: 0,
-    totalSolved: 0,
     totalPending: 0,
+    totalApproved: 0,
     totalInProgress: 0,
+    totalResolved: 0,
+    totalRejected: 0,
+    totalSolved: 0, // ✅ Added default value
     monthlyIssues: [],
   };
 
@@ -43,18 +49,21 @@ const UserDashboardMain = () => {
                 Keep up the great work!
               </p>
               <div className="pt-4">
-                <button className="bg-pink-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-pink-600 transition">
+                <Link 
+                  to="/dashboard/create-issue" 
+                  className="inline-block bg-pink-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-pink-600 transition"
+                >
                   Create New Issue
-                </button>
+                </Link>
               </div>
             </div>
 
             {/* Image Section */}
-            <div className="flex items-center justify-center md:justify-end p-4">
+            <div className="flex items-center justify-center md:justify-end lg:mt-8 p-4">
               <img
                 src={userAvatar}
                 alt="user"
-                className="w-[220px] md:w-[260px] h-auto object-contain"
+                className="w-55 md:w-65 h-auto object-contain"
               />
             </div>
           </div>
@@ -76,7 +85,15 @@ const UserDashboardMain = () => {
             </h2>
             <p className="text-xl md:text-2xl font-bold text-orange-500">
               <NumberTicker value={stats.totalPending} />
-            </p>
+            </p> 
+          </div>
+          <div className="bg-white shadow border text-center rounded-lg p-4">
+            <h2 className="text-base md:text-lg font-semibold mb-1">
+              <AuroraText>Approved</AuroraText>
+            </h2>
+            <p className="text-xl md:text-2xl font-bold text-orange-500">
+              <NumberTicker value={stats.totalApproved} />
+            </p> 
           </div>
           <div className="bg-white shadow border text-center rounded-lg p-4">
             <h2 className="text-base md:text-lg font-semibold mb-1">
@@ -88,10 +105,18 @@ const UserDashboardMain = () => {
           </div>
           <div className="bg-white shadow border text-center rounded-lg p-4">
             <h2 className="text-base md:text-lg font-semibold mb-1">
-              <AuroraText>Solved</AuroraText>
+              <AuroraText>Resolved</AuroraText>
             </h2>
             <p className="text-xl md:text-2xl font-bold text-green-500">
-              <NumberTicker value={stats.totalSolved} />
+              <NumberTicker value={stats.totalResolved} />
+            </p>
+          </div>
+          <div className="bg-white shadow border text-center rounded-lg p-4">
+            <h2 className="text-base md:text-lg font-semibold mb-1">
+              <AuroraText>Rejected</AuroraText>
+            </h2>
+            <p className="text-xl md:text-2xl font-bold text-red-500">
+              <NumberTicker value={stats.totalRejected} />
             </p>
           </div>
         </div>
@@ -100,12 +125,12 @@ const UserDashboardMain = () => {
       {/* Bottom Section */}
       <div className="flex flex-col lg:flex-row gap-6 w-full">
         {/* Left Chart */}
-        <div className="w-full lg:w-[60%] bg-white shadow border rounded-lg p-4 h-fit sm:h-[400px] md:h-[440px]">
+        <div className="w-full lg:w-[60%] bg-white shadow border rounded-lg p-4 h-fit sm:h-100 md:h-110">
           <UserPieChart stats={stats} />
         </div>
 
         {/* Right Chart */}
-        <div className="w-full lg:w-[40%] bg-white shadow border rounded-lg p-4 h-[400px] sm:h-[440px]">
+        <div className="w-full lg:w-[40%] min-w-0 bg-white shadow border rounded-lg p-4 h-110">
           <UserLineChart monthlyData={stats.monthlyIssues} />
         </div>
       </div>

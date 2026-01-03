@@ -46,7 +46,7 @@ const UserAuth = () => {
   const handleProfileClick = () => {
     if (user?.role === "user") navigate("/dashboard/user");
     else if (user?.role === "category-admin") navigate("/dashboard/category-admin");
-    else if (user?.role === "super-admin") navigate("/dashboard/admin");
+    else if (user?.role === "super-admin") navigate("/dashboard/super-admin");
   };
 
   return (
